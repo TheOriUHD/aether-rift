@@ -1,0 +1,918 @@
+@import "tailwindcss";
+
+@theme {
+  --color-void: #07070a;
+  --color-surface: #121218;
+  --color-elevated: #1a1a22;
+  --color-fg: #ecece8;
+  --color-muted: #8b8b92;
+  --color-faint: #5c5c66;
+  --color-line: #2a2a33;
+  --color-accent: #9eb0c2;
+  --color-rift: #6ec8c0;
+  --color-win: #e8dcc8;
+  --color-danger: #c45c5c;
+  --font-display: "Syne", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html,
+  body,
+  #app {
+    min-height: 100%;
+    background: var(--color-void);
+    color: var(--color-fg);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+}
+
+.slot-shell {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  color: var(--color-fg);
+}
+
+.slot-stage {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: saturate(0.92) brightness(0.7);
+  transform: scale(1.04);
+}
+
+.slot-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgb(7 7 10 / 0.28) 0%, rgb(7 7 10 / 0.48) 42%, rgb(7 7 10 / 0.86) 100%);
+}
+
+.slot-top,
+.slot-board,
+.slot-dock,
+.slot-legal {
+  position: relative;
+  z-index: 1;
+}
+
+.slot-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 16px 0;
+  padding-top: max(16px, env(safe-area-inset-top));
+}
+
+.slot-board {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px 16px 8px;
+}
+
+.slot-dock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px 12px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  background: color-mix(in oklab, var(--color-void) 78%, transparent);
+  border-top: 1px solid var(--color-line);
+}
+
+.slot-legal {
+  text-align: center;
+  font-size: 11px;
+  color: var(--color-faint);
+  padding: 0 16px 10px;
+}
+
+.slot-frame {
+  border-radius: 24px;
+  padding: 10px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--color-surface) 88%, black);
+  border: 1px solid var(--color-line);
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--color-rift) 16%, transparent),
+    0 24px 60px rgb(0 0 0 / 0.45);
+}
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  aspect-ratio: 1;
+}
+
+.slot-cell {
+  position: relative;
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--color-elevated) 92%, black);
+  border: 1px solid color-mix(in oklab, var(--color-fg) 8%, transparent);
+  overflow: hidden;
+}
+
+.slot-grid.is-dropping .slot-cell.is-drop,
+.slot-grid.is-dropping .slot-cell.is-out {
+  overflow: visible;
+  z-index: 4;
+}
+
+.slot-gem {
+  position: absolute;
+  inset: 0;
+}
+
+.slot-cell.is-drop .slot-gem,
+.slot-cell.is-out .slot-gem {
+  will-change: transform;
+}
+
+.slot-symbol {
+  position: absolute;
+  inset: 7%;
+  width: 86%;
+  height: 86%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.slot-badge {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  min-width: 22px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--color-rift);
+  color: var(--color-void);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.slot-badge-heart {
+  background: var(--color-win);
+}
+
+.slot-cell.is-win {
+  box-shadow: inset 0 0 0 2px var(--color-rift);
+}
+
+.slot-cell.is-win .slot-gem {
+  animation: cell-win 640ms ease-in-out infinite;
+}
+
+.slot-cell.is-drop .slot-gem {
+  animation: reel-drop var(--drop-ms, 760ms) cubic-bezier(0.5, 0.02, 0.82, 0.28) var(--drop-delay, 0ms) both;
+}
+
+.slot-cell.is-out .slot-gem {
+  animation: reel-out var(--drop-ms, 420ms) cubic-bezier(0.42, 0, 0.78, 0.28) var(--drop-delay, 0ms) both;
+}
+
+.slot-cell.is-explode .slot-gem {
+  animation: explode 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.slot-shell.is-turbo .slot-cell.is-win .slot-gem {
+  animation-duration: 280ms;
+}
+
+.slot-shell.is-turbo .slot-cell.is-explode .slot-gem {
+  animation-duration: 170ms;
+}
+
+.slot-cell.is-spawn {
+  box-shadow: inset 0 0 0 2px var(--color-win);
+}
+
+.slot-cell.is-collect {
+  box-shadow: inset 0 0 0 2px var(--color-win);
+}
+
+@keyframes reel-drop {
+  0% {
+    transform: translateY(var(--drop-from, -680%)) scale(0.94, 1.1);
+    filter: blur(6px);
+    opacity: 0.25;
+  }
+  78% {
+    transform: translateY(11%) scale(1.08, 0.86);
+    filter: blur(0);
+    opacity: 1;
+  }
+  89% {
+    transform: translateY(-5%) scale(0.97, 1.05);
+  }
+  100% {
+    transform: none;
+    filter: none;
+    opacity: 1;
+  }
+}
+
+@keyframes reel-out {
+  0% {
+    transform: none;
+    opacity: 1;
+    filter: none;
+  }
+  18% {
+    transform: translateY(10%) scale(1.02, 0.94);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(210%) scale(0.94, 1.12);
+    opacity: 0;
+    filter: blur(6px);
+  }
+}
+
+@keyframes cell-win {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.07);
+    filter: brightness(1.22);
+  }
+}
+
+@keyframes explode {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+.icon-btn,
+.chip,
+.btn-primary,
+.btn-ghost,
+.btn-spin {
+  transition:
+    background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  color: var(--color-fg);
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--color-elevated);
+}
+
+.icon-btn-on {
+  border-color: color-mix(in oklab, var(--color-rift) 60%, var(--color-line));
+  color: var(--color-void);
+  background: var(--color-rift);
+}
+
+.icon-btn-on:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--color-rift) 82%, white);
+}
+
+.chip {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-line);
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.chip-on {
+  border-color: color-mix(in oklab, var(--color-rift) 50%, var(--color-line));
+  color: var(--color-rift);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 22px;
+  border-radius: 14px;
+  background: var(--color-fg);
+  color: var(--color-void);
+  font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-win);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--color-line);
+  background: transparent;
+  color: var(--color-fg);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.btn-spin {
+  min-width: 96px;
+  height: 56px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: var(--color-fg);
+  color: var(--color-void);
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: -0.03em;
+}
+
+.btn-spin:hover:not(:disabled) {
+  background: var(--color-win);
+}
+
+.btn-primary:active:not(:disabled),
+.btn-spin:active:not(:disabled),
+.icon-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.slot-intro {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  min-height: 100dvh;
+  margin: 0;
+  align-items: center;
+  padding: 28px 24px;
+  padding-top: max(28px, env(safe-area-inset-top));
+  border: 0;
+  appearance: none;
+  background:
+    linear-gradient(180deg, rgb(7 7 10 / 0.46) 0%, rgb(7 7 10 / 0.78) 52%, rgb(7 7 10 / 0.92) 100%),
+    url("/slot/stage.jpg") center / cover;
+  background-color: var(--color-void);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.slot-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.slot-intro-copy {
+  max-width: 28rem;
+}
+
+.slot-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(7 7 10 / 0.72);
+  border: 0;
+}
+
+.slot-modal-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 28rem);
+  max-height: min(84dvh, 720px);
+  overflow: auto;
+  border-radius: 24px;
+  padding: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+}
+
+.slot-modal-wide {
+  width: min(100%, 52rem);
+}
+
+.slot-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 108px;
+  z-index: 40;
+  transform: translateX(-50%);
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--color-elevated);
+  border: 1px solid var(--color-danger);
+  color: var(--color-fg);
+  font-size: 13px;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.win-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  background: rgb(7 7 10 / 0.62);
+}
+
+.win-fx.is-epic,
+.win-fx.is-rift {
+  background: rgb(7 7 10 / 0.72);
+}
+
+.win-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: color-mix(in oklab, var(--color-fg) 55%, transparent);
+  animation: win-flash 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.win-fx.is-rift .win-flash {
+  background: color-mix(in oklab, var(--color-rift) 70%, white);
+}
+
+.win-rays {
+  position: absolute;
+  inset: -45%;
+  pointer-events: none;
+  background: repeating-conic-gradient(
+    from 0deg,
+    transparent 0deg 14deg,
+    color-mix(in oklab, var(--color-rift) 16%, transparent) 14deg 18deg
+  );
+  mask-image: radial-gradient(circle at center, black 8%, transparent 62%);
+  animation: win-spin 22s linear infinite;
+  opacity: 0.85;
+}
+
+.win-fx.is-epic .win-rays,
+.win-fx.is-rift .win-rays {
+  background: repeating-conic-gradient(
+    from 0deg,
+    transparent 0deg 10deg,
+    color-mix(in oklab, var(--color-win) 22%, transparent) 10deg 13deg,
+    transparent 13deg 18deg,
+    color-mix(in oklab, var(--color-rift) 20%, transparent) 18deg 21deg
+  );
+  animation-duration: 14s;
+}
+
+.win-bloom {
+  position: absolute;
+  inset: -10%;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 45%, color-mix(in oklab, var(--color-rift) 28%, transparent), transparent 58%);
+  animation: win-pulse 1.8s ease-in-out infinite;
+}
+
+.win-fx.is-mega .win-bloom {
+  background: radial-gradient(circle at 50% 45%, color-mix(in oklab, var(--color-rift) 40%, transparent), transparent 62%);
+}
+
+.win-fx.is-epic .win-bloom,
+.win-fx.is-rift .win-bloom {
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in oklab, var(--color-win) 38%, transparent), transparent 50%),
+    radial-gradient(circle at 50% 58%, color-mix(in oklab, var(--color-rift) 34%, transparent), transparent 70%);
+}
+
+.win-ring {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 8rem;
+  height: 8rem;
+  margin: -4rem 0 0 -4rem;
+  border-radius: 999px;
+  border: 2px solid color-mix(in oklab, var(--color-rift) 55%, transparent);
+  pointer-events: none;
+  animation: win-shock 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.win-ring-2 {
+  animation-delay: 0.45s;
+}
+
+.win-ring-3 {
+  border-color: color-mix(in oklab, var(--color-win) 50%, transparent);
+  animation-delay: 0.9s;
+  animation-duration: 2.1s;
+}
+
+.win-bolts {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  fill: none;
+  stroke: color-mix(in oklab, var(--color-win) 80%, var(--color-rift));
+  stroke-width: 0.7;
+  stroke-linecap: round;
+  opacity: 0;
+  filter: drop-shadow(0 0 8px var(--color-rift));
+  animation: win-bolt 2.4s ease-in-out infinite;
+}
+
+.win-copy {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 16px;
+}
+
+.win-kicker {
+  font-size: 11px;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--color-rift);
+  animation: win-in 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.win-fx.is-epic .win-kicker,
+.win-fx.is-rift .win-kicker {
+  font-size: 13px;
+  letter-spacing: 0.48em;
+  color: var(--color-win);
+}
+
+.win-amount {
+  margin-top: 8px;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 12vw, 7.2rem);
+  line-height: 0.92;
+  letter-spacing: -0.05em;
+  color: var(--color-win);
+  animation: win-pop 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  text-shadow: 0 0 28px color-mix(in oklab, var(--color-rift) 40%, transparent);
+}
+
+.win-fx.is-mega .win-amount {
+  font-size: clamp(3.2rem, 13vw, 7.6rem);
+}
+
+.win-fx.is-epic .win-amount,
+.win-fx.is-rift .win-amount {
+  font-size: clamp(3.4rem, 14vw, 8.4rem);
+  color: var(--color-fg);
+  text-shadow:
+    0 0 18px color-mix(in oklab, var(--color-rift) 70%, transparent),
+    0 0 60px color-mix(in oklab, var(--color-win) 35%, transparent);
+}
+
+.win-amount.is-landed {
+  animation: win-land 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.win-mult {
+  margin-top: 10px;
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  animation: win-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.win-spark {
+  position: absolute;
+  bottom: -8px;
+  border-radius: 999px;
+  background: var(--color-rift);
+  opacity: 0;
+  pointer-events: none;
+  animation-name: win-rise;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-iteration-count: infinite;
+}
+
+.win-fx.is-epic .win-spark:nth-child(odd),
+.win-fx.is-rift .win-spark:nth-child(odd) {
+  background: var(--color-win);
+}
+
+.win-shard {
+  position: absolute;
+  width: 10px;
+  height: 18px;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--color-win), var(--color-rift));
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  opacity: 0;
+  animation-name: win-shard-fall;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-iteration-count: infinite;
+  filter: drop-shadow(0 0 6px var(--color-rift));
+}
+
+.slot-shell.is-win-big .slot-board,
+.slot-shell.is-win-mega .slot-board,
+.slot-shell.is-win-epic .slot-board,
+.slot-shell.is-win-rift .slot-board {
+  animation: win-shake 620ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.slot-shell.is-win-mega .slot-board {
+  animation-duration: 900ms;
+}
+
+.slot-shell.is-win-epic .slot-board {
+  animation: win-punch 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.slot-shell.is-win-rift .slot-board {
+  animation: win-punch 1.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.slot-shell.is-win-epic .slot-stage,
+.slot-shell.is-win-rift .slot-stage {
+  filter: saturate(1.25) brightness(0.85);
+}
+
+.slot-shell.is-win-rift .slot-veil {
+  background:
+    radial-gradient(circle at 50% 40%, color-mix(in oklab, var(--color-rift) 28%, transparent), transparent 55%),
+    linear-gradient(180deg, rgb(7 7 10 / 0.2) 0%, rgb(7 7 10 / 0.5) 42%, rgb(7 7 10 / 0.88) 100%);
+}
+
+@keyframes win-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes win-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes win-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes win-land {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes win-rise {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.6);
+  }
+  12% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--drift, 0px), -110vh, 0) scale(1.1);
+  }
+}
+
+@keyframes win-shard-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -12vh, 0) rotate(0deg) scale(0.6);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--drift, 0px), 110vh, 0) rotate(var(--spin, 80deg)) scale(1.1);
+  }
+}
+
+@keyframes win-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes win-shock {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(6.5);
+    opacity: 0;
+  }
+}
+
+@keyframes win-flash {
+  0% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes win-bolt {
+  0%,
+  62%,
+  100% {
+    opacity: 0;
+  }
+  8%,
+  14% {
+    opacity: 0.9;
+  }
+  18% {
+    opacity: 0.15;
+  }
+  70%,
+  76% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes win-shake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-3px, 2px);
+  }
+  40% {
+    transform: translate(3px, -2px);
+  }
+  60% {
+    transform: translate(-2px, -1px);
+  }
+  80% {
+    transform: translate(2px, 1px);
+  }
+}
+
+@keyframes win-punch {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  12% {
+    transform: scale(1.045) translate(-6px, 3px);
+  }
+  24% {
+    transform: scale(1.02) translate(5px, -3px);
+  }
+  40% {
+    transform: scale(1.03) translate(-3px, 2px);
+  }
+  70% {
+    transform: scale(1.01) translate(2px, -1px);
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .win-bloom,
+  .win-kicker,
+  .win-amount,
+  .win-spark,
+  .win-shard,
+  .win-rays,
+  .win-ring,
+  .win-flash,
+  .win-bolts,
+  .win-mult,
+  .slot-shell.is-win-big .slot-board,
+  .slot-shell.is-win-mega .slot-board,
+  .slot-shell.is-win-epic .slot-board,
+  .slot-shell.is-win-rift .slot-board {
+    animation: none;
+  }
+
+  .win-spark,
+  .win-shard,
+  .win-rays,
+  .win-ring,
+  .win-flash,
+  .win-bolts {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slot-cell.is-drop .slot-gem,
+  .slot-cell.is-out .slot-gem,
+  .slot-cell.is-explode .slot-gem,
+  .slot-cell.is-win .slot-gem {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .slot-dock {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .slot-dock > div {
+    justify-content: center;
+  }
+
+  .btn-spin {
+    flex: 1;
+    width: 100%;
+  }
+}
