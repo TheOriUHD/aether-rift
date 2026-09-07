@@ -34,7 +34,7 @@ export function isMigrationFile(path) {
  * Non-`.sql` entries (a `readdir` also yields `migrations/auth/`) are dropped.
  * @param {Iterable<string>} paths
  * @param {Iterable<string>} applied
- * @returns {Array<{ name: string, path: string }>
+ * @returns {Array<{ name: string, path: string }>}
  */
 export function pendingMigrations(paths, applied) {
   const done = new Set(applied);
