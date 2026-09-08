@@ -1,15 +1,15 @@
 import type { SymbolId } from "./types";
 
 export const SYMBOL_SRC: Record<SymbolId, string> = {
-  cinder: "/slot/cinder.png?v=2",
-  shard: "/slot/shard.png?v=2",
-  mark: "/slot/mark.png?v=2",
-  crown: "/slot/crown.png",
-  iris: "/slot/iris.png",
-  nova: "/slot/nova.png?v=2",
-  wild: "/slot/wild.png",
-  tear: "/slot/tear.png",
-  heart: "/slot/heart.png?v=2",
+  cinder: "/slot/cinder.webp",
+  shard: "/slot/shard.webp",
+  mark: "/slot/mark.webp",
+  crown: "/slot/crown.webp",
+  iris: "/slot/iris.webp",
+  nova: "/slot/nova.webp",
+  wild: "/slot/wild.webp",
+  tear: "/slot/tear.webp",
+  heart: "/slot/heart.webp",
 };
 
-export const STAGE_SRC = "/slot/stage.jpg";
+export const STAGE_SRC = "/slot/stage.webp";

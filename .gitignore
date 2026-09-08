@@ -19,6 +19,7 @@ artifacts/
 # Restored from assets/b64 by `npm install` (scripts/materialize-assets.mjs)
 public/slot/*.png
 public/slot/*.jpg
+public/slot/*.webp
 public/og.jpg
 public/x-banner.jpg
 public/__grok/icon-180.png
