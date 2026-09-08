@@ -15,7 +15,7 @@ function walk(current, prefix = "") {
       walk(join(current, entry.name), rel + "/");
       continue;
     }
-    const text = readFileSync(join(current, entry.name), "utf8").trim();
+    const text = readFileSync(join(current, entry.name), "utf8").replace(/\s+/g, "");
     const part = rel.match(/^(.*)\.b64(?:\.part(\d{2}))?$/);
     if (!part) continue;
     const outRel = part[1];
