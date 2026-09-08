@@ -12,12 +12,16 @@ Social-casino cluster slot. **Play money / credits only — not real-money gambl
 
 ## Run locally
 
+Requires [Node.js](https://nodejs.org/) 22+.
+
 ```bash
 npm install
 npm run dev
 ```
 
-Open the printed local URL. `npm run build` for production. `npm test` for scaffold tests; `npx tsx --test src/lib/slot/engine.test.ts` for the math tests.
+`npm install` is required. Running `npm run dev` before that fails because Vite is not on disk yet. Then open the URL the server prints.
+
+`npm run build` for production. `npx tsx --test src/lib/slot/engine.test.ts` for the math tests.
 
 Symbol art is stored as base64 under `assets/b64/` and written into `public/` on `npm install`.
 
@@ -42,7 +46,7 @@ Point an iframe at `/?embed=1`. The game talks to the parent on channel `aether-
 **Game → host**
 
 - `ready`
-- `txn.request` `{ id, kind: "debit" \\ | "credit", amount, reason }`
+- `txn.request` `{ id, kind: "debit" \| "credit", amount, reason }`
 - `round.end` with win / balance fields
 - `error`
 
@@ -57,7 +61,7 @@ A demo host lives at `/integrator`. CORS is open on the slot API (`content-type`
 ### REST
 
 | Method | Path | Purpose |
-|---|---|---|
+|---|---|
 | `GET` | `/api/slot/config` | Paytable, bets, feature costs |
 | `POST` | `/api/slot/session` | Demo session |
 | `POST` | `/api/slot/spin` | Play a round (body includes bet, mode, optional bonus token) |

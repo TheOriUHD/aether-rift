@@ -20,7 +20,8 @@
  * `process.env`, which is why the merge has to happen before Vite starts.
  */
 import { spawn } from "node:child_process";
-import { readFileSync, realpathSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
+import { createRequire } from "node:module";
 import { constants as osConstants } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -88,6 +89,40 @@ export function projectRoot() {
 }
 
 /**
+ * Resolve a wrapped CLI to something `spawn` can actually exec.
+ *
+ * npm scripts put `node_modules/.bin` on PATH, but `spawn("vite")` without a
+ * shell still ENOENTs on Windows (`vite.cmd`) and when `npm install` was
+ * skipped. Prefer the package's JS entry via `node`, then the local `.bin`.
+ */
+export function resolveWrappedCommand(command, args, root) {
+  try {
+    const require = createRequire(join(root, "package.json"));
+    const pkgPath = require.resolve(`${command}/package.json`);
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+    const binField = pkg.bin;
+    const rel = typeof binField === "string" ? binField : binField?.[command];
+    if (rel) {
+      return {
+        command: process.execPath,
+        args: [join(dirname(pkgPath), rel), ...args],
+        shell: false,
+      };
+    }
+  } catch {
+    // package not installed — fall through so ENOENT can explain npm install
+  }
+
+  const isWin = process.platform === "win32";
+  const localBin = join(root, "node_modules", ".bin", isWin ? `${command}.cmd` : command);
+  if (existsSync(localBin)) {
+    return { command: localBin, args, shell: isWin };
+  }
+
+  return { command, args, shell: isWin };
+}
+
+/**
  * Whether `moduleUrl` is the script node was asked to run.
  *
  * Both sides are resolved through symlinks: node realpaths `import.meta.url`
@@ -110,13 +145,24 @@ function main(argv) {
     console.error("usage: node scripts/with-app-env.mjs <command> [args…]");
     process.exit(2);
   }
-  const env = mergeAppEnv(readAppEnv(projectRoot()), process.env);
-  const child = spawn(command, args, { stdio: "inherit", env });
+  const root = projectRoot();
+  const env = mergeAppEnv(readAppEnv(root), process.env);
+  const resolved = resolveWrappedCommand(command, args, root);
+  const child = spawn(resolved.command, resolved.args, {
+    stdio: "inherit",
+    env,
+    shell: resolved.shell,
+  });
   // The dev server is long-running and is stopped by signalling this wrapper.
   for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
     process.on(signal, () => child.kill(signal));
   }
   child.on("error", (err) => {
+    if (err?.code === "ENOENT") {
+      console.error(`[with-app-env] '${command}' was not found.`);
+      console.error("Run `npm install` in this folder first, then `npm run dev`.");
+      process.exit(127);
+    }
     console.error(`[with-app-env] failed to run ${command}:`, err?.message || err);
     process.exit(127);
   });
