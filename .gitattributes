@@ -1,0 +1,5 @@
+*.webp binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.svg text

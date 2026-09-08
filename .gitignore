@@ -16,11 +16,8 @@ artifacts/
 *.tsbuildinfo
 .cache/
 
-# Restored from assets/b64 by `npm install` (scripts/materialize-assets.mjs)
+# PNG/JPEG masters stay local. WebP symbols, OG card, and X banner are committed.
 public/slot/*.png
 public/slot/*.jpg
-public/slot/*.webp
-public/og.jpg
-public/x-banner.jpg
 public/__grok/icon-180.png
 public/__grok/install/assets/homescreen/*.png
