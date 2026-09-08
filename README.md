@@ -23,7 +23,7 @@ npm run dev
 
 `npm run build` for production. `npx tsx --test src/lib/slot/engine.test.ts` for the math tests.
 
-Symbol art is stored as base64 under `assets/b64/` and written into `public/` on `npm install`.
+Symbol art is stored as WebP base64 under `assets/b64/` and written into `public/` on `npm install`.
 
 ## How it plays
 
@@ -77,7 +77,7 @@ src/routes/api/slot/    REST
 src/components/slot/    board, overlays, audio, iframe bridge
 src/routes/index.tsx    game
 src/routes/integrator.tsx
-public/slot/            chroma-keyed symbol art
+public/slot/            chroma-keyed symbol art (WebP, restored on npm install)
 ```
 
 ## License / use
