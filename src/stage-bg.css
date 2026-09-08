@@ -1,0 +1,7 @@
+.slot-intro {
+  background-image:
+    linear-gradient(180deg, rgb(7 7 10 / 0.46) 0%, rgb(7 7 10 / 0.78) 52%, rgb(7 7 10 / 0.92) 100%),
+    url("/slot/stage.webp");
+  background-size: auto, cover;
+  background-position: 0 0, center;
+}
