@@ -29,22 +29,23 @@ const SHARE_META_KEYS = new Set([
 ]);
 
 export function escapeHtml(value) {
+  // Named entities via unicode so source has no raw HTML entity literals.
   return String(value)
-    .replaceAll("&", "&")
-    .replaceAll("<", "<")
-    .replaceAll(">", ">")
-    .replaceAll('"', """)
-    .replaceAll("'", "&#39;");
+    .replaceAll("&", "\u0026amp;")
+    .replaceAll("<", "\u0026lt;")
+    .replaceAll(">", "\u0026gt;")
+    .replaceAll('"', "\u0026quot;")
+    .replaceAll("'", "\u0026#39;");
 }
 
-/** Inverse of escapeHtml. Decode & last so a single pass undoes one encode. */
+/** Inverse of escapeHtml. Decode amp last so a single pass undoes one encode. */
 function unescapeHtml(value) {
   return String(value)
-    .replaceAll("<", "<")
-    .replaceAll(">", ">")
-    .replaceAll(""", '"')
-    .replaceAll("&#39;", "'")
-    .replaceAll("&", "&");
+    .replaceAll("\u0026lt;", "<")
+    .replaceAll("\u0026gt;", ">")
+    .replaceAll("\u0026quot;", '"')
+    .replaceAll("\u0026#39;", "'")
+    .replaceAll("\u0026amp;", "&");
 }
 
 /** 6-digit hex for the og.grok.me placeholder, or "" if site.color is missing/invalid. */
@@ -364,7 +365,7 @@ export function grokOgHeadTags({
 
 export function stripShareMetaTags(html) {
   return String(html).replace(/<meta\b[^>]*>/gi, (tag) => {
-    const attrs = [...tag.matchAll(/\b(?:property|name)\s*=\s*["']([^"']+)["']/gi)];
+    const attrs = [...tag.matchAll(/\b(?:property|name)\s*=\s*["']([^"']+)["']/gi]);
     for (const match of attrs) {
       if (SHARE_META_KEYS.has(String(match[1]).toLowerCase())) return "";
     }
@@ -479,7 +480,6 @@ export function createHeadInjector(ctx = {}) {
     });
 
   return {
-    /** @param {Uint8Array | string} chunk @returns {Buffer[]} chunks ready to emit */
     push(chunk) {
       const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
       if (done) return [buf];
@@ -493,7 +493,6 @@ export function createHeadInjector(ctx = {}) {
       const head = apply(joined.subarray(0, at + closeLen).toString("utf8"));
       return [Buffer.concat([Buffer.from(head, "utf8"), joined.subarray(at + closeLen)])];
     },
-    /** @returns {Buffer[]} whatever is still buffered (no `</head>` seen) */
     flush() {
       if (done || pending.length === 0) return [];
       const rest = Buffer.concat(pending);
