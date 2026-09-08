@@ -23,7 +23,7 @@ npm run dev
 
 `npm run build` for production. `npx tsx --test src/lib/slot/engine.test.ts` for the math tests.
 
-Symbol art is stored as WebP base64 under `assets/b64/` and written into `public/` on `npm install`.
+Symbol art is chroma-keyed **WebP** in `public/slot/` (~10–32 KB each). A PWA icon is stored as base64 under `assets/b64/` and written into `public/` on `npm install`.
 
 ## How it plays
 
@@ -61,7 +61,7 @@ A demo host lives at `/integrator`. CORS is open on the slot API (`content-type`
 ### REST
 
 | Method | Path | Purpose |
-|---|---|
+|---|---|---|
 | `GET` | `/api/slot/config` | Paytable, bets, feature costs |
 | `POST` | `/api/slot/session` | Demo session |
 | `POST` | `/api/slot/spin` | Play a round (body includes bet, mode, optional bonus token) |
@@ -77,7 +77,9 @@ src/routes/api/slot/    REST
 src/components/slot/    board, overlays, audio, iframe bridge
 src/routes/index.tsx    game
 src/routes/integrator.tsx
-public/slot/            chroma-keyed symbol art (WebP, restored on npm install)
+public/slot/            chroma-keyed symbol art (WebP)
+public/og.jpg           share card
+public/x-banner.jpg     X / Twitter banner
 ```
 
 ## License / use
